@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Paper Fold Thickness Calculator</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --card:#10161d; --muted:#9bb3c4; --text:#e6f0f7; --accent:#5cc8ff;
+      --ok:#8ee07a; --warn:#ffd166;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      color:var(--text); background:radial-gradient(1200px 800px at 75% -10%, #11223322, transparent), var(--bg);
+    }
+    header{
+      padding:28px 18px 10px; text-align:center;
+    }
+    h1{margin:0 0 6px; font-size:clamp(1.4rem, 2.2vw + 1rem, 2.2rem)}
+    p.sub{margin:0; color:var(--muted)}
+    .wrap{max-width:980px; margin:18px auto 60px; padding:0 14px;}
+    .card{background:linear-gradient(180deg,#121a22,#0f141a); border:1px solid #2a3a49; border-radius:18px; box-shadow:0 10px 30px #0008;}
+    .grid{display:grid; gap:16px; grid-template-columns:1.2fr 1fr;}
+    @media (max-width:880px){.grid{grid-template-columns:1fr}}
+    .section{padding:18px}
+    .section + .section{border-top:1px solid #203040}
+
+    label{display:block; font-weight:600; margin:8px 0 6px}
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    input[type="number"], select{
+      background:#0b1218; color:var(--text); border:1px solid #324656; border-radius:12px; padding:10px 12px; font-size:1rem; min-width:110px;
+    }
+    input[type="range"]{width:100%}
+    .pill{display:inline-flex; gap:8px; align-items:center; background:#0b1218; border:1px solid #334756; border-radius:999px; padding:8px 12px; color:var(--muted)}
+    .muted{color:var(--muted)}
+    .accent{color:var(--accent)}
+
+    .result{
+      display:grid; gap:14px; grid-template-columns:1fr 1fr; align-items:start;
+    }
+    @media (max-width:640px){.result{grid-template-columns:1fr}}
+    .big{
+      font-size:clamp(1.4rem, 2.8vw + 1rem, 2.6rem); font-weight:800; letter-spacing:.2px;
+    }
+    .mono{font-variant-numeric:tabular-nums; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+    .cards{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px}
+    @media (max-width:720px){.cards{grid-template-columns:1fr}}
+    .mini{background:#0b1218; border:1px solid #233544; border-radius:14px; padding:12px}
+    .mini h4{margin:0 0 6px; font-size:0.95rem}
+
+    .bar{height:12px; border-radius:999px; background:#15202a; overflow:hidden; border:1px solid #223444}
+    .bar > div{height:100%; background:linear-gradient(90deg, var(--accent), #9ef1ff); width:0%}
+
+    .note{font-size:0.9rem; color:var(--muted)}
+    footer{max-width:980px; margin:24px auto; padding:0 14px; color:var(--muted); text-align:center}
+    a{color:var(--accent); text-decoration:none}
+    .btn{background:#0b1218; border:1px solid #233544; border-radius:12px; padding:8px 12px; color:var(--text); cursor:pointer}
+    .btn:active{transform:translateY(1px)}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Paper Fold Thickness Calculator</h1>
+    <p class="sub">How thick a sheet becomes after <strong>N</strong> folds. Uses the ideal doubling model: <span class="mono">thickness = t₀ × 2ⁿ</span>.</p>
+  </header>
+
+  <main class="wrap">
+    <div class="card">
+      <div class="section grid">
+        <div>
+          <label for="thickness">Starting thickness</label>
+          <div class="row">
+            <input id="thickness" type="number" step="0.001" value="0.1" min="0.001" />
+            <select id="unit">
+              <option value="mm" selected>mm</option>
+              <option value="in">inches</option>
+              <option value="um">microns (µm)</option>
+            </select>
+            <span class="pill">Copy paper ≈ <span class="mono">0.1 mm</span></span>
+          </div>
+
+          <label for="folds" style="margin-top:14px">Number of folds</label>
+          <div class="row">
+            <input id="folds" type="number" min="0" max="1000" value="7" />
+            <input id="foldSlider" type="range" min="0" max="60" value="7" aria-label="Folds slider" />
+            <button class="btn" id="addOne">+1 fold</button>
+          </div>
+
+          <p class="note">Real paper crumples and can’t be folded many times—this is a theoretical, perfect fold model.</p>
+        </div>
+
+        <div class="result">
+          <div>
+            <div class="muted">Resulting thickness</div>
+            <div class="big mono" id="pretty"></div>
+            <div class="note" id="scientific"></div>
+          </div>
+          <div>
+            <div class="muted">Common units</div>
+            <div class="cards">
+              <div class="mini"><h4>Millimeters</h4><div class="mono" id="mm"></div></div>
+              <div class="mini"><h4>Centimeters</h4><div class="mono" id="cm"></div></div>
+              <div class="mini"><h4>Meters</h4><div class="mono" id="m"></div></div>
+              <div class="mini"><h4>Kilometers</h4><div class="mono" id="km"></div></div>
+              <div class="mini"><h4>Inches</h4><div class="mono" id="inch"></div></div>
+              <div class="mini"><h4>Feet</h4><div class="mono" id="ft"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="muted" style="margin-bottom:10px">Fun comparisons</div>
+        <div class="cards">
+          <div class="mini">
+            <h4>Compared to a human (1.7 m)</h4>
+            <div class="bar"><div id="barHuman"></div></div>
+            <div class="note mono" id="cmpHuman"></div>
+          </div>
+          <div class="mini">
+            <h4>Compared to Mt. Everest (8,849 m)</h4>
+            <div class="bar"><div id="barEverest"></div></div>
+            <div class="note mono" id="cmpEverest"></div>
+          </div>
+          <div class="mini">
+            <h4>To the Kármán line (100 km)</h4>
+            <div class="bar"><div id="barKarman"></div></div>
+            <div class="note mono" id="cmpKarman"></div>
+          </div>
+          <div class="mini">
+            <h4>To the Moon (~384,400 km)</h4>
+            <div class="bar"><div id="barMoon"></div></div>
+            <div class="note mono" id="cmpMoon"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <details>
+          <summary><strong>How it works</strong></summary>
+          <p class="note">Each ideal fold doubles the thickness. If the original sheet is <span class="mono">t₀</span> and you fold it <span class="mono">n</span> times, the new thickness is <span class="mono">t = t₀ × 2ⁿ</span>. This tool uses base SI units internally and formats the output using human-friendly units and scientific notation when values get extremely large.</p>
+        </details>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    Built for curiosity. Tip: try <strong>50</strong> folds with <strong>0.1 mm</strong> paper.
+  </footer>
+
+  <script>
+    const el = id => document.getElementById(id);
+
+    const thicknessEl = el('thickness');
+    const unitEl = el('unit');
+    const foldsEl = el('folds');
+    const sliderEl = el('foldSlider');
+    const addOneBtn = el('addOne');
+
+    const out = {
+      pretty: el('pretty'), scientific: el('scientific'),
+      mm: el('mm'), cm: el('cm'), m: el('m'), km: el('km'), inch: el('inch'), ft: el('ft'),
+      barHuman: el('barHuman'), barEverest: el('barEverest'), barKarman: el('barKarman'), barMoon: el('barMoon'),
+      cmpHuman: el('cmpHuman'), cmpEverest: el('cmpEverest'), cmpKarman: el('cmpKarman'), cmpMoon: el('cmpMoon')
+    };
+
+    // Unit conversions
+    const U = {
+      mm_to_m: v => v / 1000,
+      in_to_m: v => v * 0.0254,
+      um_to_m: v => v / 1_000_000,
+      m_to_mm: v => v * 1000,
+      m_to_cm: v => v * 100,
+      m_to_km: v => v / 1000,
+      m_to_in: v => v / 0.0254,
+      m_to_ft: v => v / 0.3048,
+    };
+
+    function baseMeters(){
+      const val = parseFloat(thicknessEl.value || '0');
+      if (!isFinite(val) || val <= 0) return 0;
+      switch(unitEl.value){
+        case 'mm': return U.mm_to_m(val);
+        case 'in': return U.in_to_m(val);
+        case 'um': return U.um_to_m(val);
+        default: return U.mm_to_m(val);
+      }
+    }
+
+    function formatSI(meters){
+      if (!isFinite(meters) || meters === 0) return '0 m';
+      const abs = Math.abs(meters);
+      const units = [
+        {u:'nm', f:1e-9}, {u:'µm', f:1e-6}, {u:'mm', f:1e-3}, {u:'cm', f:1e-2},
+        {u:'m', f:1}, {u:'km', f:1e3}, {u:'Mm', f:1e6}, {u:'Gm', f:1e9}
+      ];
+      // Pick the unit with value between [1, 1000)
+      let picked = units[4];
+      for (const u of units){
+        const v = meters / u.f;
+        if (v >= 1 && v < 1000){ picked = u; break; }
+        if (v < 1) picked = u; // keeps smaller unit if all <1
+      }
+      const val = meters / picked.f;
+      return `${val.toLocaleString(undefined,{maximumFractionDigits:3})} ${picked.u}`;
+    }
+
+    function scientificNotation(meters){
+      if (!isFinite(meters) || meters === 0) return '0 m';
+      const exp = meters.toExponential(3);
+      return `${exp} m`;
+    }
+
+    function clamp(n, min, max){ return Math.min(max, Math.max(min, n)); }
+
+    function update(){
+      const n = clamp(parseInt(foldsEl.value || '0', 10), 0, 1000);
+      foldsEl.value = n; // sanitize
+      sliderEl.value = clamp(n, parseInt(sliderEl.min,10), parseInt(sliderEl.max,10));
+
+      const t0 = baseMeters();
+      if (t0 <= 0){
+        out.pretty.textContent = '—';
+        out.scientific.textContent = '';
+        ['mm','cm','m','km','inch','ft'].forEach(k=> out[k].textContent='—');
+        ['barHuman','barEverest','barKarman','barMoon'].forEach(k=> out[k].style.width='0%');
+        ['cmpHuman','cmpEverest','cmpKarman','cmpMoon'].forEach(k=> out[k].textContent='');
+        return;
+      }
+
+      // Compute thickness: t = t0 * 2^n (use Math.pow; safe up to ~1e308)
+      const t = t0 * Math.pow(2, n);
+
+      out.pretty.textContent = formatSI(t);
+      out.scientific.textContent = `= ${scientificNotation(t)}  (t₀ × 2^${n})`;
+
+      // Common units
+      out.mm.textContent   = (U.m_to_mm(t)).toLocaleString(undefined,{maximumFractionDigits:3});
+      out.cm.textContent   = (U.m_to_cm(t)).toLocaleString(undefined,{maximumFractionDigits:3});
+      out.m.textContent    = (t).toLocaleString(undefined,{maximumFractionDigits:6});
+      out.km.textContent   = (U.m_to_km(t)).toLocaleString(undefined,{maximumFractionDigits:6});
+      out.inch.textContent = (U.m_to_in(t)).toLocaleString(undefined,{maximumFractionDigits:3});
+      out.ft.textContent   = (U.m_to_ft(t)).toLocaleString(undefined,{maximumFractionDigits:3});
+
+      // Comparisons
+      const H = { human: 1.7, everest: 8848.86, karman: 100_000, moon: 384_400_000_000 / 1000 }; // meters; moon distance ~384,400 km -> 384,400,000 m
+      const compare = (value, target) => {
+        if (value===0) return {pct:0, txt:'—'};
+        const ratio = value / target;
+        const pct = Math.min(100, ratio * 100);
+        const txt = ratio >= 1 ? `${ratio.toLocaleString(undefined,{maximumFractionDigits:3})}×` : `${(ratio*100).toLocaleString(undefined,{maximumFractionDigits:2})}%`;
+        return {pct, txt};
+      }
+
+      const c1 = compare(t, H.human);
+      out.barHuman.style.width = c1.pct + '%';
+      out.cmpHuman.textContent = `${c1.txt} of a 1.7 m person`;
+
+      const c2 = compare(t, H.everest);
+      out.barEverest.style.width = c2.pct + '%';
+      out.cmpEverest.textContent = `${c2.txt} of Mt. Everest height`;
+
+      const c3 = compare(t, H.karman);
+      out.barKarman.style.width = c3.pct + '%';
+      out.cmpKarman.textContent = `${c3.txt} of 100 km (Kármán line)`;
+
+      const c4 = compare(t, 384_400_000);
+      out.barMoon.style.width = c4.pct + '%';
+      out.cmpMoon.textContent = `${c4.txt} of Earth→Moon distance (~384,400 km)`;
+    }
+
+    // Sync controls
+    thicknessEl.addEventListener('input', update);
+    unitEl.addEventListener('change', update);
+    foldsEl.addEventListener('input', update);
+    sliderEl.addEventListener('input', e => { foldsEl.value = e.target.value; update(); });
+    addOneBtn.addEventListener('click', e => { e.preventDefault(); foldsEl.value = (+foldsEl.value||0) + 1; update(); });
+
+    // Init
+    update();
+  </script>
+</body>
+</html>
